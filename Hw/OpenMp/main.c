@@ -194,12 +194,17 @@ void send_master_path(int *path) {
 }
 
 void receive_master_path(int *path) {
-    LOG_DEBUG("Request next path");
-    int _;
-    MPI_Send(&_, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
+    #pragma omp critical
+    {
 
-    LOG_DEBUG("Receive path");
-    MPI_Recv(path, MASTER_PATH_SIZE, MPI_INT, 0, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        LOG_DEBUG("Request next path");
+        int _;
+        MPI_Send(&_, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
+
+        LOG_DEBUG("Receive path");
+        MPI_Recv(path, MASTER_PATH_SIZE, MPI_INT, 0, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+    }
 
     #ifdef DEBUG
 
@@ -386,7 +391,10 @@ int main(int argc, char **argv) {
             best_path = r_best_path;
         }
 
-        MPI_Send(best_path, NUM_CITIES, MPI_INT, 0, 4, MPI_COMM_WORLD);
+        #pragma omp critical
+        {
+            MPI_Send(best_path, NUM_CITIES, MPI_INT, 0, 4, MPI_COMM_WORLD);
+        }
     }
 
     LOG("End");
